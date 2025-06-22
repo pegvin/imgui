@@ -8,6 +8,24 @@
 
 #include <X11/Xlib.h>
 
+typedef enum {
+	ImGuiMouse_Left = 0,
+	ImGuiMouse_Right,
+	ImGuiMouse_Middle,
+	ImGuiMouse_COUNT
+} ImGuiMouse;
+
+typedef struct {
+	// Mouse
+	Point MousePos;
+	Point MousePosPrev;
+	B32   MouseDown[ImGuiMouse_COUNT];
+
+	// Window
+	Rect  WindowSize;
+	B32   RequestedClose;
+} ImGuiIO;
+
 typedef struct {
 	Display* display;
 	Screen* screen;
@@ -18,18 +36,14 @@ typedef struct {
 } ImGuiPlatform;
 
 typedef struct {
-	Point mouse;
-	B32 mouse_down;
+	ImGuiIO io;
 
 	S64 hot_item;
 	S64 active_item;
 
-	B32 should_close;
-
 	U64 frame_start;
 	U64 frame_end;
 
-	Rect window_size;
 	ImGuiPlatform platform;
 } ImGuiCtx;
 
@@ -41,7 +55,10 @@ void imgui_begin_frame(ImGuiCtx* ctx);
 void imgui_end_frame(ImGuiCtx* ctx);
 
 // Widgets
-B32 imgui_button(ImGuiCtx* ctx, U64 id, Rng2D rect);
+#define IMID (__LINE__)
+
+#define imgui_button(ctx, rect) imgui_button_(ctx, IMID, rect)
+B32 imgui_button_(ImGuiCtx* ctx, U64 id, Rng2D rect);
 
 // Drawing
 void imgui_draw_rect(ImGuiCtx* ctx, RGBU8 color, Rng2D coords);

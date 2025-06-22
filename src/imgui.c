@@ -1,5 +1,6 @@
 #include "imgui.h"
 #include "os/os.h"
+#include "base/types.h"
 #include "base/math.h"
 
 #include <stdio.h>
@@ -75,21 +76,16 @@ ImGuiCtx imgui_init(void) {
 	// Show & Raise The Window
 	XMapRaised(dpy, w);
 
-	ImGuiCtx ctx = {
-		.platform = {
-			.display = dpy,
-			.screen = scr,
-			.font = fontInfo,
-			.window = w,
-			.gc = gc,
-			.wmDeleteMessage = wmDeleteMessage
-		},
-		.window_size = window_size,
-		.should_close = 0,
-		.mouse = { 0, 0 },
-		.mouse_down = 0,
-		.hot_item = 0,
-		.active_item = 0
+	ImGuiCtx ctx;
+	MemoryZeroStruct(&ctx);
+	ctx.io.WindowSize = window_size;
+	ctx.platform = (ImGuiPlatform){
+		.display = dpy,
+		.screen = scr,
+		.font = fontInfo,
+		.window = w,
+		.gc = gc,
+		.wmDeleteMessage = wmDeleteMessage
 	};
 
 	return ctx;
@@ -115,24 +111,27 @@ void imgui_begin_frame(ImGuiCtx* ctx) {
 		} else if (e.type == KeyRelease) {
 			// printf("[LOG] Key Released! (%d)\n", e.xkey.keycode);
 		} else if (e.type == ButtonPress) {
-			if (e.xbutton.button == 1) {
-				ctx->mouse_down = 1;
+			switch (e.xbutton.button) {
+				case 1: ctx->io.MouseDown[ImGuiMouse_Left]   = 1; break;
+				case 2: ctx->io.MouseDown[ImGuiMouse_Middle] = 1; break;
+				case 3: ctx->io.MouseDown[ImGuiMouse_Right]  = 1; break;
 			}
-			// printf("[LOG] Mouse Button Pressed! (%d)\n", e.xbutton.button);
 		} else if (e.type == ButtonRelease) {
-			if (e.xbutton.button == 1) {
-				ctx->mouse_down = 0;
+			switch (e.xbutton.button) {
+				case 1: ctx->io.MouseDown[ImGuiMouse_Left]   = 0; break;
+				case 2: ctx->io.MouseDown[ImGuiMouse_Middle] = 0; break;
+				case 3: ctx->io.MouseDown[ImGuiMouse_Right]  = 0; break;
 			}
-			// printf("[LOG] Mouse Button Released! (%d)\n", e.xbutton.button);
 		} else if (e.type == MotionNotify) {
-			ctx->mouse = point_from(e.xmotion.x, e.xmotion.y);
+			ctx->io.MousePosPrev = ctx->io.MousePos;
+			ctx->io.MousePos = point_from(e.xmotion.x, e.xmotion.y);
 			// printf("[LOG] Mouse Moved! (Relative: %d, %d) (Absolute: %d, %d)\n", e.xmotion.x, e.xmotion.y, e.xmotion.x_root, e.xmotion.y_root);
 		} else if (e.type == ConfigureNotify) {
-			ctx->window_size.w = e.xconfigure.width;
-			ctx->window_size.h = e.xconfigure.height;
+			ctx->io.WindowSize.w = e.xconfigure.width;
+			ctx->io.WindowSize.h = e.xconfigure.height;
 			// printf("[LOG] Window Resized (%dx%d)\n", e.xconfigure.width, e.xconfigure.height);
 		} else if (e.type == DestroyNotify || (e.type == ClientMessage && (Atom)e.xclient.data.l[0] == ctx->platform.wmDeleteMessage)) {
-			ctx->should_close = 1;
+			ctx->io.RequestedClose = 1;
 		}
 	}
 
@@ -143,7 +142,7 @@ void imgui_begin_frame(ImGuiCtx* ctx) {
 void imgui_end_frame(ImGuiCtx* ctx) {
 	ctx->frame_end = os_now_milliseconds();
 
-	if (!ctx->mouse_down) { // Reset Active Item If Mouse Was Released
+	if (!ctx->io.MouseDown[ImGuiMouse_Left]) { // Reset Active Item If Mouse Was Released
 		ctx->active_item = 0;
 	}
 
@@ -151,10 +150,10 @@ void imgui_end_frame(ImGuiCtx* ctx) {
 	os_sleep_milliseconds(1000 / 15);
 }
 
-B32 imgui_button(ImGuiCtx* ctx, U64 id, Rng2D rect) {
-	if (point_intersects_rng2d(ctx->mouse, rect)) {
+B32 imgui_button_(ImGuiCtx* ctx, U64 id, Rng2D rect) {
+	if (point_intersects_rng2d(ctx->io.MousePos, rect)) {
 		ctx->hot_item = id;
-		if (ctx->active_item < 1 && ctx->mouse_down) {
+		if (ctx->active_item < 1 && ctx->io.MouseDown[ImGuiMouse_Left]) {
 			ctx->active_item = id;
 		}
 	}
@@ -175,7 +174,7 @@ B32 imgui_button(ImGuiCtx* ctx, U64 id, Rng2D rect) {
 
 	imgui_draw_rect_filled(ctx, btn_color, rect);
 
-	return ctx->mouse_down == 0 && is_hot && is_active;
+	return !ctx->io.MouseDown[ImGuiMouse_Left] && is_hot && is_active;
 }
 
 #define _RGBA(r, g, b, a) (((U32)(a) << 24) + ((U32)(r) << 16) + ((U32)(g) << 8) + ((U32)(b)))
