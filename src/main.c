@@ -22,6 +22,10 @@ int main(void) {
 			printf("[LOG] Mouse Button Released! (%d)\n", e.xbutton.button);
 		} else if (e.type == MotionNotify) {
 			printf("[LOG] Mouse Moved! (Relative: %d, %d) (Absolute: %d, %d)\n", e.xmotion.x, e.xmotion.y, e.xmotion.x_root, e.xmotion.y_root);
+		} else if (e.type == ConfigureNotify) {
+			ctx.window_size.w = e.xconfigure.width;
+			ctx.window_size.h = e.xconfigure.height;
+			printf("[LOG] Window Resized (%dx%d)\n", e.xconfigure.width, e.xconfigure.height);
 		} else if (e.type == DestroyNotify || (e.type == ClientMessage && (Atom)e.xclient.data.l[0] == ctx.wmDeleteMessage)) {
 			break;
 		}

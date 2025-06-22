@@ -45,6 +45,7 @@ ImGuiCtx imgui_init(void) {
 	// Select Inputs
 	U64 EventMasks = 0;
 	EventMasks |= ExposureMask;
+	EventMasks |= StructureNotifyMask; // For Handling Changes To Window Size, Etc.
 	EventMasks |= KeyPressMask | KeyReleaseMask;
 	EventMasks |= ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
 	XSelectInput(dpy, w, EventMasks);
@@ -53,12 +54,12 @@ ImGuiCtx imgui_init(void) {
 	XStoreName(dpy, w, "Immediate Mode GUI");
 
 	// Disable Resizing & Hint To Center The Window
-	XSizeHints hints = {0};
-	hints.flags       = PSize | PMinSize | PMaxSize | PWinGravity;
-	hints.min_width   = hints.max_width  = hints.base_width  = window_size.w;
-	hints.min_height  = hints.max_height = hints.base_height = window_size.h;
-	hints.win_gravity = CenterGravity;
-	XSetWMNormalHints(dpy, w, &hints);
+	// XSizeHints hints = {0};
+	// hints.flags       = PSize | PMinSize | PMaxSize | PWinGravity;
+	// hints.min_width   = hints.max_width  = hints.base_width  = window_size.w;
+	// hints.min_height  = hints.max_height = hints.base_height = window_size.h;
+	// hints.win_gravity = CenterGravity;
+	// XSetWMNormalHints(dpy, w, &hints);
 
 	// Set Window Type
 	Atom type = XInternAtom(dpy,"_NET_WM_WINDOW_TYPE", False);
