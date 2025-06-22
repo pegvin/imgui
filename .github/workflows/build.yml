@@ -1,0 +1,38 @@
+name: Build
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install gcc clang ccache libx11-dev -y
+
+    - name: Build (Using gcc)
+      run: |
+        ./build.sh clean
+        CC=gcc LD=gcc ./build.sh release
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: linux-gcc
+        if-no-files-found: error
+        path: ./build/imgui
+
+    - name: Build (Using clang)
+      run: |
+        ./build.sh clean
+        CC=clang LD=clang ./build.sh release
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: linux-clang
+        if-no-files-found: error
+        path: ./build/imgui
