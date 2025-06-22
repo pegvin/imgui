@@ -4,6 +4,10 @@ B32 point_match(Point a, Point b) {
 	return a.x == b.x && a.y == b.y;
 }
 
+B32 point_intersects_rng2d(Point p, Rng2D r) {
+	return p.x >= r.min.x && p.y >= r.min.y && p.x <= r.max.x && p.y <= r.max.y;
+}
+
 B32 rect_match(Rect a, Rect b) {
 	return a.w == b.w && a.h == b.h;
 }

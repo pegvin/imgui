@@ -40,7 +40,7 @@ U64 os_now_microseconds(void) {
 U64 os_now_milliseconds(void) {
 	struct timespec ts = {0};
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-	U64 result = ts.tv_sec * 1E+3;
+	U64 result = (ts.tv_sec * 1E+3) + (ts.tv_nsec / 1E+6);
 	return result;
 }
 

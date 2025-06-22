@@ -24,15 +24,20 @@ typedef struct {
 	U64 min, max;
 } Rng1DU64;
 
+#define point_from(_x, _y) ((Point){ .x = _x, .y = _y })
+
 #define abs_s64(v) ((S64)llabs(v))
 
 #define Rng2D_Invalidate(r) ((r).min.x = (r).max.x = 0)
 #define Rng2D_IsValid(r) ((r).min.x != (r).max.x)
+#define rng2d_from_xy_wh(_x, _y, _w, _h) ((Rng2D){ .min = { .x = (_x), .y = (_y) }, .max = { .x = (_x) + (_w), .y = (_y) + (_h) } })
 
 #define rng1_mag(r) ((r).max - (r).min)
 #define rng1_is_mag_zero(r) (rng1_mag(r) == 0)
 
 B32 point_match(Point a, Point b);
+B32 point_intersects_rng2d(Point p, Rng2D r);
+
 B32 rect_match(Rect a, Rect b);
 Rng2D rng2_intersect(Rng2D a, Rng2D b);
 
